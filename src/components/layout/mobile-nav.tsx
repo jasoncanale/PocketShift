@@ -17,7 +17,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background pb-[env(safe-area-inset-bottom,0px)] md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-brand/30 bg-background pb-[env(safe-area-inset-bottom,0px)] md:hidden">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive =
@@ -30,7 +30,7 @@ export function MobileNav() {
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 py-2 text-xs transition-colors",
                 isActive
-                  ? "text-primary"
+                  ? "text-brand"
                   : "text-muted-foreground hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}

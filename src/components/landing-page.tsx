@@ -41,7 +41,7 @@ export function LandingPage() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="border-b border-[var(--brand)]/30 px-4 py-4">
+      <header className="border-b border-brand/40 px-4 py-4">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-2">
             <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="size-9" />
@@ -70,7 +70,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-4xl space-y-16">
           <section className="text-center">
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Personal work productivity <span className="text-[var(--brand)]">tracker</span>
+              Personal work productivity <span className="text-brand">tracker</span>
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
               Manage events, contacts, contracts, and spending across multiple companies. Works offline.
@@ -96,43 +96,43 @@ export function LandingPage() {
           <section>
             <h2 className="mb-8 text-center text-2xl font-semibold">Features</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-lg border border-[var(--brand)]/20 p-4">
-                <CalendarDays className="mb-2 size-8 text-[var(--brand)]" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <CalendarDays className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Calendar</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Daily, weekly, and monthly views. See events, contracts, and contacts in one place.
                 </p>
               </div>
-              <div className="rounded-lg border p-4">
-                <ClipboardList className="mb-2 size-8 text-primary" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <ClipboardList className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Events & Projects</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Track tasks with due dates, status, and optional recurrence.
                 </p>
               </div>
-              <div className="rounded-lg border border-[var(--brand)]/20 p-4">
-                <Users className="mb-2 size-8 text-[var(--brand)]" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <Users className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Contacts</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Keep track of people you meet: name, department, photo, and meeting date.
                 </p>
               </div>
-              <div className="rounded-lg border border-[var(--brand)]/20 p-4">
-                <FileText className="mb-2 size-8 text-[var(--brand)]" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <FileText className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Contracts</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Monitor contract start, duration, and expiry with reminders.
                 </p>
               </div>
-              <div className="rounded-lg border border-[var(--brand)]/20 p-4">
-                <Coffee className="mb-2 size-8 text-[var(--brand)]" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <Coffee className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Spending</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Log vending and coffee purchases. View statistics and export data.
                 </p>
               </div>
-              <div className="rounded-lg border border-[var(--brand)]/20 p-4">
-                <Building2 className="mb-2 size-8 text-[var(--brand)]" aria-hidden />
+              <div className="rounded-lg border border-brand/30 p-4">
+                <Building2 className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Companies</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Switch between company profiles. Each has its own data and settings.
@@ -141,8 +141,8 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-[var(--brand)]/30 bg-muted/50 p-6 text-center">
-            <WifiOff className="mx-auto mb-2 size-8 text-[var(--brand)]" aria-hidden />
+          <section className="rounded-lg border border-brand/40 bg-muted/50 p-6 text-center">
+            <WifiOff className="mx-auto mb-2 size-8 text-brand" aria-hidden />
             <h3 className="font-medium">Works offline</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               PocketShift is a Progressive Web App. Install it on your device for quick access. Data syncs when you&apos;re back online.
@@ -159,7 +159,7 @@ export function LandingPage() {
         </div>
       </main>
 
-      <footer className="border-t border-[var(--brand)]/30 px-4 py-6">
+      <footer className="border-t border-brand/40 px-4 py-6">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
           <span>PocketShift</span>
           <div className="flex gap-6">

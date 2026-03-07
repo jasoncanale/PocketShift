@@ -86,7 +86,7 @@ export function MonthView({
 
   return (
     <div className="select-none">
-      <ScrollArea className="h-[calc(100svh-16rem)]">
+      <ScrollArea className="min-h-[200px] max-h-[min(calc(100svh-18rem),360px)]">
         {/* Week day headers */}
         <div className="grid grid-cols-7 mb-1 sticky top-0 bg-background z-10">
           {weekDays.map((day) => (

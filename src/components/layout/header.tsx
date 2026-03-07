@@ -15,7 +15,7 @@ export function Header() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="flex h-14 items-center gap-2 border-b px-4">
+    <header className="flex h-14 items-center gap-2 border-b border-brand/30 px-4">
       <SidebarTrigger className="hidden md:flex" />
       <Separator orientation="vertical" className="mr-2 hidden h-4 md:block" />
       <h1 className="flex items-center gap-2 text-lg font-bold md:hidden">

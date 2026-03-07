@@ -69,7 +69,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b p-4">
+      <SidebarHeader className="border-b border-brand/30 p-4">
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <Image src="/icons/icon-192.png" alt="" width={32} height={32} className="size-8" />
           PocketShift
@@ -122,7 +122,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-2">
+      <SidebarFooter className="border-t border-brand/30 p-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <AlertDialog open={signOutDialogOpen} onOpenChange={setSignOutDialogOpen}>

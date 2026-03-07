@@ -144,7 +144,7 @@ export function CalendarViewComponent({
             contacts={contacts}
           />
           {/* Selected day summary */}
-          <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+          <div className="mt-2 rounded-lg border bg-muted/30 p-4">
             <h3 className="mb-3 text-sm font-semibold">
               {selectedDate.toLocaleDateString(loc, {
                 weekday: "long",
