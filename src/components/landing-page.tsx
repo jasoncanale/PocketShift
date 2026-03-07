@@ -15,12 +15,16 @@ import {
   WifiOff,
 } from "lucide-react";
 
+/**
+ * True only when the app is running as an installed PWA (launched from home screen icon).
+ * Use standalone only – fullscreen/minimal-ui can match in Samsung Internet and other
+ * mobile browsers even when not installed as PWA, causing unwanted redirects.
+ */
 function isPwa(): boolean {
   if (typeof window === "undefined") return false;
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches ||
-    window.matchMedia("(display-mode: minimal-ui)").matches
+    (navigator as { standalone?: boolean }).standalone === true
   );
 }
 

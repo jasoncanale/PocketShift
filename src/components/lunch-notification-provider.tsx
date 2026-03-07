@@ -21,6 +21,7 @@ export function LunchNotificationProvider({ children }: { children: React.ReactN
             lunch_duration_minutes: full.lunch_duration_minutes,
             notifications_enabled:
               full.lunch_reminders_enabled ?? full.notifications_enabled ?? true,
+            work_days: full.work_days ?? "1,2,3,4,5",
           }
         : null;
     },

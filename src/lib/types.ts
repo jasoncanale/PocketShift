@@ -210,6 +210,7 @@ export type Database = {
           notifications_enabled: boolean;
           lunch_reminders_enabled: boolean | null;
           contract_reminders_enabled: boolean | null;
+          work_days: string | null;
           theme: string;
           currency: string;
           date_format: string | null;
@@ -224,6 +225,7 @@ export type Database = {
           notifications_enabled?: boolean;
           lunch_reminders_enabled?: boolean | null;
           contract_reminders_enabled?: boolean | null;
+          work_days?: string | null;
           theme?: string;
           currency?: string;
           date_format?: string | null;
@@ -238,6 +240,7 @@ export type Database = {
           notifications_enabled?: boolean;
           lunch_reminders_enabled?: boolean | null;
           contract_reminders_enabled?: boolean | null;
+          work_days?: string | null;
           theme?: string;
           currency?: string;
           date_format?: string | null;

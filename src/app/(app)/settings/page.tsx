@@ -21,7 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard } from "lucide-react";
+import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard, Github } from "lucide-react";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import Link from "next/link";
 import { getOrCreateSettings } from "@/lib/settings";
@@ -41,6 +44,23 @@ export default function SettingsPage() {
 
   const [lunchTime, setLunchTime] = useState("12:30");
   const [lunchDuration, setLunchDuration] = useState("60");
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]);
+
+  const WORK_DAY_LABELS: { value: number; label: string }[] = [
+    { value: 0, label: "Sun" },
+    { value: 1, label: "Mon" },
+    { value: 2, label: "Tue" },
+    { value: 3, label: "Wed" },
+    { value: 4, label: "Thu" },
+    { value: 5, label: "Fri" },
+    { value: 6, label: "Sat" },
+  ];
+
+  const toggleWorkDay = (day: number) => {
+    setWorkDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
+    );
+  };
   const [lunchRemindersEnabled, setLunchRemindersEnabled] = useState(true);
   const [contractRemindersEnabled, setContractRemindersEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR");
@@ -67,6 +87,9 @@ export default function SettingsPage() {
       setLunchRemindersEnabled(
         (settings as { lunch_reminders_enabled?: boolean | null }).lunch_reminders_enabled ?? true
       );
+      const wd = (settings as { work_days?: string | null }).work_days ?? "1,2,3,4,5";
+      const parsed = wd.split(",").map((d) => parseInt(d.trim(), 10)).filter((n) => !isNaN(n) && n >= 0 && n <= 6);
+      setWorkDays(parsed.length > 0 ? parsed : [1, 2, 3, 4, 5]);
       setContractRemindersEnabled(
         (settings as { contract_reminders_enabled?: boolean | null }).contract_reminders_enabled ?? true
       );
@@ -202,13 +225,33 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Lunch Break */}
+      {/* Work Day */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Lunch Break</CardTitle>
-          <CardDescription>Set your lunch time and duration</CardDescription>
+          <CardTitle className="text-base">Work Day</CardTitle>
+          <CardDescription>Set your work days and lunch time. Lunch reminders only fire on selected days.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <Label className="mb-2 block">Work days</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {WORK_DAY_LABELS.map(({ value, label }) => (
+                <Badge
+                  key={value}
+                  variant={workDays.includes(value) ? "default" : "outline"}
+                  className={cn(
+                    "cursor-pointer px-2.5 py-1 text-xs font-medium transition-colors",
+                    workDays.includes(value)
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "hover:bg-muted"
+                  )}
+                  onClick={() => toggleWorkDay(value)}
+                >
+                  {label}
+                </Badge>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="lunchTime">Lunch Time</Label>
@@ -394,6 +437,38 @@ export default function SettingsPage() {
               </dd>
             </div>
           </dl>
+        </CardContent>
+      </Card>
+
+      {/* Socials */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Socials</CardTitle>
+          <CardDescription>Website and source code</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant="secondary"
+              className="cursor-pointer gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary/80"
+              asChild
+            >
+              <Link href="https://pocket-shift-xi.vercel.app" target="_blank" rel="noopener noreferrer">
+                <Image src="/icons/icon-192.png" alt="" width={16} height={16} className="size-4" />
+                Website
+              </Link>
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="cursor-pointer gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary/80"
+              asChild
+            >
+              <Link href="https://github.com/jasoncanale/PocketShift" target="_blank" rel="noopener noreferrer">
+                <Github className="size-4" />
+                GitHub
+              </Link>
+            </Badge>
+          </div>
         </CardContent>
       </Card>
 

@@ -6,6 +6,7 @@ type LunchSettings = {
   lunch_time: string;
   lunch_duration_minutes: number;
   notifications_enabled: boolean;
+  work_days?: string | null;
 };
 
 const REMINDER_MINUTES_BEFORE = 15;
@@ -18,6 +19,10 @@ export function useLunchNotification(settings: LunchSettings | null | undefined)
 
     const checkLunchTime = () => {
       if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      const workDays = (settings.work_days ?? "1,2,3,4,5").split(",").map((d) => parseInt(d.trim(), 10));
+      const today = new Date().getDay();
+      if (!workDays.includes(today)) return;
 
       const [hours, minutes] = settings.lunch_time.split(":").map(Number);
       const now = new Date();
@@ -44,7 +49,7 @@ export function useLunchNotification(settings: LunchSettings | null | undefined)
     const interval = setInterval(checkLunchTime, 60 * 1000);
     checkLunchTime();
     return () => clearInterval(interval);
-  }, [settings?.lunch_time, settings?.lunch_duration_minutes, settings?.notifications_enabled]);
+  }, [settings?.lunch_time, settings?.lunch_duration_minutes, settings?.notifications_enabled, settings?.work_days]);
 
   // Reset daily
   useEffect(() => {

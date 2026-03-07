@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS: Omit<SettingsInsert, "user_id"> = {
   notifications_enabled: true,
   lunch_reminders_enabled: true,
   contract_reminders_enabled: true,
+  work_days: "1,2,3,4,5",
   theme: "dark",
   currency: "EUR",
   date_format: "locale",

@@ -29,3 +29,6 @@ create policy "Users can delete own avatars" on storage.objects for delete to au
 
 -- Migration 6: Contact gender
 alter table contacts add column if not exists gender text;
+
+-- Migration 7: Work days (0=Sun, 1=Mon, ..., 6=Sat; default Mon-Fri)
+alter table settings add column if not exists work_days text default '1,2,3,4,5';
