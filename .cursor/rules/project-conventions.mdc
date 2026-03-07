@@ -1,0 +1,35 @@
+---
+description: PocketShift coding standards and API patterns
+globs: ["src/**/*.{ts,tsx}"]
+alwaysApply: false
+---
+
+# PocketShift Project Conventions
+
+## API Layer
+
+- All mutation functions in `src/lib/api/*.ts` use `withOfflineMutation()`
+- Return type: `Promise<void | { queued: true }>`
+- Mutation handlers must check `isOfflineQueued(data)` and skip query invalidation when queued
+
+## Components
+
+- Use shadcn/ui primitives from `@/components/ui/`
+- Shared components: `EmptyState`, `QueryError`, `ConfirmDeleteDialog`, `OfflineBanner`
+- Page-specific UI can live in page files; extract to `components/` when reused
+
+## Styling
+
+- Tailwind CSS; prefer `cn()` utility for conditional classes
+- Follow existing patterns for cards, dialogs, forms
+
+## Validation
+
+- Zod schemas in `src/lib/validations.ts`
+- Use `schema.safeParse()` before submitting forms
+
+## Error Handling
+
+- Use `formatError()` from `lib/error-utils.ts` for user-facing messages
+- Error boundaries on app and auth layouts
+- `QueryError` for query failures; show retry option

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Shadcn_UI__list_blocks",
+      "mcp__Shadcn_UI__get_component_demo",
+      "mcp__Shadcn_UI__get_component",
+      "Bash(npx create-next-app@latest PocketShift --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack --skip-install)",
+      "Bash(npm init -y)",
+      "Bash(npm install next@latest react@latest react-dom@latest)",
+      "Bash(npm install -D typescript @types/react @types/node @tailwindcss/postcss tailwindcss @types/react-dom eslint eslint-config-next)",
+      "Bash(npm install clsx tailwind-merge class-variance-authority lucide-react @supabase/supabase-js @supabase/ssr @tanstack/react-query recharts react-day-picker dexie date-fns sonner next-themes)",
+      "Bash(npx shadcn@latest add button card tabs input label form select textarea dialog drawer dropdown-menu avatar badge separator scroll-area skeleton switch popover sheet sidebar sonner chart calendar toggle toggle-group tooltip --yes)",
+      "Bash(npx shadcn@latest add progress --yes)"
+    ]
+  }
+}

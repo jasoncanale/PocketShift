@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+dist
+
+# Environment
+.env
+.env*.local
+
+# IDE / OS
+.vercel
+*.log
+.DS_Store
+
+# PWA build artifacts (if regenerated)
+public/workbox-*.js
+public/worker-*.js
+
+# TypeScript
+*.tsbuildinfo
