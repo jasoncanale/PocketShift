@@ -43,15 +43,12 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/privacy" ||
     request.nextUrl.pathname === "/terms";
 
-  if (user && request.nextUrl.pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/calendar";
-    return NextResponse.redirect(url);
-  }
-
   if (!user && !isAuthPage && !isPublicPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    const ua = request.headers.get("user-agent") ?? "";
+    const isMobileBrowser =
+      /Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    url.pathname = isMobileBrowser ? "/" : "/login";
     return NextResponse.redirect(url);
   }
 

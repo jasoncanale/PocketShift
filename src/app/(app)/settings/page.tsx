@@ -15,13 +15,22 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard, Github } from "lucide-react";
+import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard, Github, Info } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -34,6 +43,7 @@ import { isOfflineQueued } from "@/lib/offline-mutation";
 import { subscribeToPush } from "@/lib/push-notifications";
 import type { Settings, SettingsInsert } from "@/lib/types";
 import { CURRENCIES, DATE_FORMATS, getDateFormatLabel, LANGUAGES } from "@/lib/types";
+import { APP_VERSION } from "@/lib/version";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -68,6 +78,7 @@ export default function SettingsPage() {
   const [dateFormat, setDateFormat] = useState("locale");
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
   const [themeMounted, setThemeMounted] = useState(false);
+  const [signOutDialogOpen, setSignOutDialogOpen] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["settings", user?.id],
@@ -177,6 +188,7 @@ export default function SettingsPage() {
   });
 
   const handleLogout = async () => {
+    setSignOutDialogOpen(false);
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
@@ -494,6 +506,22 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Version */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Info className="size-4" />
+            Version
+          </CardTitle>
+          <CardDescription>
+            App version. Bumped for logic changes, section moves, renames, logo or icon updates.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="font-mono text-sm font-medium">{APP_VERSION}</p>
+        </CardContent>
+      </Card>
+
       <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
         {saveMutation.isPending ? (
           <>
@@ -507,7 +535,24 @@ export default function SettingsPage() {
 
       <Separator />
 
-      <Button variant="destructive" onClick={handleLogout} className="w-full">
+      <AlertDialog open={signOutDialogOpen} onOpenChange={setSignOutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out? You will need to sign in again to access your data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={handleLogout}>
+              Sign out
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Button variant="destructive" onClick={() => setSignOutDialogOpen(true)} className="w-full">
         <LogOut className="mr-2 size-4" />
         Sign Out
       </Button>
