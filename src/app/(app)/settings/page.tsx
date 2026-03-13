@@ -195,6 +195,20 @@ export default function SettingsPage() {
     },
   });
 
+  const handleExportBackup = async () => {
+    if (!user) return;
+    setBackupLoading(true);
+    try {
+      const data = await fetchBackupData(user.id);
+      downloadBackup(data);
+      toast.success("Backup downloaded");
+    } catch (err) {
+      toast.error(formatError(err));
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     setSignOutDialogOpen(false);
     await supabase.auth.signOut();
