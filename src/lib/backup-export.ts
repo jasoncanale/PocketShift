@@ -24,7 +24,7 @@ export async function fetchBackupData(userId: string): Promise<BackupData> {
     supabase.from("settings").select("*").eq("user_id", userId).maybeSingle(),
   ]);
 
-  const profiles = profilesRes.data ?? [];
+  const profiles = (profilesRes.data ?? []) as { id: string }[];
   const profileIds = profiles.map((p) => p.id);
 
   if (profileIds.length === 0) {
