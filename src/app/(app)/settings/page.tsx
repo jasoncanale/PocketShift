@@ -30,13 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard, Github, Info } from "lucide-react";
+import { LogOut, FileText, Building2, Loader2, Shield, Scale, Keyboard, Github, Info, Wallet, Download } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import Link from "next/link";
 import { getOrCreateSettings } from "@/lib/settings";
+import { fetchBackupData, downloadBackup } from "@/lib/backup-export";
 import { settingsSchema } from "@/lib/validations";
 import { formatError } from "@/lib/error-utils";
 import { isOfflineQueued } from "@/lib/offline-mutation";
@@ -74,11 +75,14 @@ export default function SettingsPage() {
   const [lunchRemindersEnabled, setLunchRemindersEnabled] = useState(true);
   const [contractRemindersEnabled, setContractRemindersEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR");
+  const [budgetWeekly, setBudgetWeekly] = useState("");
+  const [budgetMonthly, setBudgetMonthly] = useState("");
   const [language, setLanguage] = useState("device");
   const [dateFormat, setDateFormat] = useState("locale");
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
   const [themeMounted, setThemeMounted] = useState(false);
   const [signOutDialogOpen, setSignOutDialogOpen] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["settings", user?.id],
@@ -105,6 +109,10 @@ export default function SettingsPage() {
         (settings as { contract_reminders_enabled?: boolean | null }).contract_reminders_enabled ?? true
       );
       setCurrency(settings.currency || "EUR");
+      const bw = (settings as { budget_weekly?: number | null }).budget_weekly;
+      const bm = (settings as { budget_monthly?: number | null }).budget_monthly;
+      setBudgetWeekly(bw != null && bw > 0 ? String(bw) : "");
+      setBudgetMonthly(bm != null && bm > 0 ? String(bm) : "");
       setLanguage((settings as { language?: string })?.language ?? "device");
       setDateFormat((settings as { date_format?: string })?.date_format ?? "locale");
     }
@@ -342,6 +350,45 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Budget */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Wallet className="size-4" />
+            Budget
+          </CardTitle>
+          <CardDescription>Optional weekly and monthly spending limits. Alerts shown on Spending page when exceeded.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="budgetWeekly">Weekly limit ({currency})</Label>
+            <Input
+              id="budgetWeekly"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="e.g. 50"
+              value={budgetWeekly}
+              onChange={(e) => setBudgetWeekly(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="budgetMonthly">Monthly limit ({currency})</Label>
+            <Input
+              id="budgetMonthly"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="e.g. 200"
+              value={budgetMonthly}
+              onChange={(e) => setBudgetMonthly(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Currency */}
       <Card>
         <CardHeader>
@@ -502,6 +549,39 @@ export default function SettingsPage() {
               <Scale className="mr-2 size-4" />
               Terms and Conditions
             </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Backup */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Download className="size-4" />
+            Data Backup
+          </CardTitle>
+          <CardDescription>
+            Export all your data (events, people, contracts, companies, menu, purchases, settings) as a JSON file.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleExportBackup}
+            disabled={backupLoading || !user}
+          >
+            {backupLoading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 size-4" />
+                Export all data
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>

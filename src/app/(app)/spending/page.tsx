@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import * as spendingApi from "@/lib/api/spending";
 import { useProfile } from "@/providers/profile-provider";
+import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,11 +53,14 @@ import { formatError } from "@/lib/error-utils";
 import { isOfflineQueued } from "@/lib/offline-mutation";
 import { downloadCsv, parseCsvRow } from "@/lib/csv-export";
 import { format } from "date-fns";
+import { getOrCreateSettings } from "@/lib/settings";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "@/lib/utils";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { TooltipDesktop } from "@/components/tooltip-desktop";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 export default function SpendingPage() {
+  const { user } = useAuth();
   const { activeProfile } = useProfile();
   const currency = useCurrency();
   const { formatDateTime, locale } = useDateFormat();
@@ -108,6 +112,16 @@ export default function SpendingPage() {
       return spendingApi.getMenuItems(supabase, profileId);
     },
     enabled: !!profileId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      return getOrCreateSettings(supabase, user.id);
+    },
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -504,6 +518,29 @@ export default function SpendingPage() {
     .filter((p) => new Date(p.purchased_at).toDateString() === new Date().toDateString())
     .reduce((sum, p) => sum + Number(p.price), 0);
 
+  const now = new Date();
+  const weekStart = startOfWeek(now);
+  const weekEnd = endOfWeek(now);
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
+  const weekTotal = purchases
+    .filter((p) => {
+      const d = new Date(p.purchased_at);
+      return d >= weekStart && d <= weekEnd;
+    })
+    .reduce((sum, p) => sum + Number(p.price), 0);
+  const monthTotal = purchases
+    .filter((p) => {
+      const d = new Date(p.purchased_at);
+      return d >= monthStart && d <= monthEnd;
+    })
+    .reduce((sum, p) => sum + Number(p.price), 0);
+
+  const budgetWeekly = (settings as { budget_weekly?: number | null })?.budget_weekly ?? null;
+  const budgetMonthly = (settings as { budget_monthly?: number | null })?.budget_monthly ?? null;
+  const weeklyExceeded = budgetWeekly != null && budgetWeekly > 0 && weekTotal > budgetWeekly;
+  const monthlyExceeded = budgetMonthly != null && budgetMonthly > 0 && monthTotal > budgetMonthly;
+
   if (!activeProfile) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -607,13 +644,79 @@ export default function SpendingPage() {
         </div>
       </div>
 
-      {/* Today's total */}
-      <Card>
-        <CardContent className="flex items-center justify-between p-4">
-          <span className="text-sm text-muted-foreground">Today&apos;s spending</span>
-          <span className="text-lg font-bold">{formatCurrency(todayTotal, currency, locale)}</span>
-        </CardContent>
-      </Card>
+      {/* Budget exceeded alerts */}
+      {(weeklyExceeded || monthlyExceeded) && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-destructive">
+              {weeklyExceeded && monthlyExceeded
+                ? "Weekly and monthly budget exceeded"
+                : weeklyExceeded
+                  ? "Weekly budget exceeded"
+                  : "Monthly budget exceeded"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {weeklyExceeded && monthlyExceeded
+                ? `${formatCurrency(weekTotal, currency, locale)} / ${formatCurrency(budgetWeekly!, currency, locale)} this week; ${formatCurrency(monthTotal, currency, locale)} / ${formatCurrency(budgetMonthly!, currency, locale)} this month`
+                : weeklyExceeded
+                  ? `${formatCurrency(weekTotal, currency, locale)} / ${formatCurrency(budgetWeekly!, currency, locale)} this week`
+                  : `${formatCurrency(monthTotal, currency, locale)} / ${formatCurrency(budgetMonthly!, currency, locale)} this month`}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Today's total and budget progress */}
+      <div className="space-y-2">
+        <Card>
+          <CardContent className="flex items-center justify-between p-4">
+            <span className="text-sm text-muted-foreground">Today&apos;s spending</span>
+            <span className="text-lg font-bold">{formatCurrency(todayTotal, currency, locale)}</span>
+          </CardContent>
+        </Card>
+        {(budgetWeekly != null && budgetWeekly > 0) || (budgetMonthly != null && budgetMonthly > 0) ? (
+          <div className="flex flex-wrap gap-2">
+            {budgetWeekly != null && budgetWeekly > 0 && (
+              <Card className="flex-1 min-w-[140px]">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground">This week</p>
+                  <p className="text-sm font-medium">
+                    {formatCurrency(weekTotal, currency, locale)} / {formatCurrency(budgetWeekly, currency, locale)}
+                  </p>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        weekTotal > budgetWeekly ? "bg-destructive" : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(100, (weekTotal / budgetWeekly) * 100)}%` }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {budgetMonthly != null && budgetMonthly > 0 && (
+              <Card className="flex-1 min-w-[140px]">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground">This month</p>
+                  <p className="text-sm font-medium">
+                    {formatCurrency(monthTotal, currency, locale)} / {formatCurrency(budgetMonthly, currency, locale)}
+                  </p>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        monthTotal > budgetMonthly ? "bg-destructive" : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(100, (monthTotal / budgetMonthly) * 100)}%` }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : null}
+      </div>
 
       <Tabs defaultValue="buy">
         <TabsList className="w-full">
@@ -711,6 +814,12 @@ export default function SpendingPage() {
               icon={Coffee}
               title="No menu items"
               description="Add menu items to quick-buy, or use the button above for custom purchases."
+              action={
+                <Button size="sm" onClick={openAddMenu}>
+                  <Plus className="mr-1 size-4" />
+                  Add item
+                </Button>
+              }
             />
           ) : (
             <>
@@ -950,6 +1059,12 @@ export default function SpendingPage() {
                 icon={Coffee}
                 title="No purchases yet"
                 description="Log a purchase from the Menu tab or add a custom purchase above."
+                action={
+                  <Button size="sm" onClick={() => setCustomOpen(true)}>
+                    <PenLine className="mr-1 size-4" />
+                    Log custom purchase
+                  </Button>
+                }
               />
             ) : (
               <Card>
@@ -1121,6 +1236,12 @@ export default function SpendingPage() {
               icon={Coffee}
               title="No menu items yet"
               description="Add from templates above or create custom items."
+              action={
+                <Button size="sm" onClick={openAddMenu}>
+                  <Plus className="mr-1 size-4" />
+                  Add item
+                </Button>
+              }
             />
           ) : (
             <div className="space-y-1">

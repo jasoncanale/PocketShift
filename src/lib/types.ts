@@ -41,6 +41,8 @@ export type Database = {
           end_date: string | null;
           contract_type: string | null;
           notes: string | null;
+          status: "draft" | "active" | "completed" | null;
+          contact_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -51,6 +53,8 @@ export type Database = {
           end_date?: string | null;
           contract_type?: string | null;
           notes?: string | null;
+          status?: "draft" | "active" | "completed" | null;
+          contact_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -61,6 +65,8 @@ export type Database = {
           end_date?: string | null;
           contract_type?: string | null;
           notes?: string | null;
+          status?: "draft" | "active" | "completed" | null;
+          contact_id?: string | null;
           created_at?: string;
         };
       };
@@ -76,6 +82,7 @@ export type Database = {
           recurrence_rule: string | null;
           recurrence_end: string | null;
           checklist: ChecklistItem[] | null;
+          contact_ids: string[] | null;
           created_at: string;
         };
         Insert: {
@@ -89,6 +96,7 @@ export type Database = {
           recurrence_rule?: string | null;
           recurrence_end?: string | null;
           checklist?: ChecklistItem[] | null;
+          contact_ids?: string[] | null;
           created_at?: string;
         };
         Update: {
@@ -102,6 +110,7 @@ export type Database = {
           recurrence_rule?: string | null;
           recurrence_end?: string | null;
           checklist?: ChecklistItem[] | null;
+          contact_ids?: string[] | null;
           created_at?: string;
         };
       };
@@ -112,6 +121,7 @@ export type Database = {
           first_name: string;
           last_name: string | null;
           department: string | null;
+          role: string | null;
           gender: string | null;
           photo_url: string | null;
           met_date: string | null;
@@ -124,6 +134,7 @@ export type Database = {
           first_name: string;
           last_name?: string | null;
           department?: string | null;
+          role?: string | null;
           gender?: string | null;
           photo_url?: string | null;
           met_date?: string | null;
@@ -136,6 +147,7 @@ export type Database = {
           first_name?: string;
           last_name?: string | null;
           department?: string | null;
+          role?: string | null;
           gender?: string | null;
           photo_url?: string | null;
           met_date?: string | null;
@@ -215,6 +227,8 @@ export type Database = {
           currency: string;
           date_format: string | null;
           language: string | null;
+          budget_weekly: number | null;
+          budget_monthly: number | null;
           created_at: string;
         };
         Insert: {
@@ -230,6 +244,8 @@ export type Database = {
           currency?: string;
           date_format?: string | null;
           language?: string | null;
+          budget_weekly?: number | null;
+          budget_monthly?: number | null;
           created_at?: string;
         };
         Update: {
@@ -245,6 +261,8 @@ export type Database = {
           currency?: string;
           date_format?: string | null;
           language?: string | null;
+          budget_weekly?: number | null;
+          budget_monthly?: number | null;
           created_at?: string;
         };
       };
@@ -275,6 +293,7 @@ export type EventStatus = "todo" | "in_progress" | "done";
 export type MenuCategory = "vending" | "coffee" | "other";
 
 export const GENDERS = ["male", "female", "other"] as const;
+export const ROLES = ["Manager", "Developer", "Designer", "Client", "HR", "Finance", "Other"] as const;
 export type Gender = (typeof GENDERS)[number];
 
 export const CURRENCIES = ["EUR", "USD", "GBP"] as const;

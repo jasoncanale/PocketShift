@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/profiles/person-avatar";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { QueryError } from "@/components/query-error";
@@ -50,7 +51,7 @@ import { formatError } from "@/lib/error-utils";
 import { isOfflineQueued } from "@/lib/offline-mutation";
 import { uploadImage } from "@/lib/storage";
 import type { Contact, ContactInsert } from "@/lib/types";
-import { GENDERS } from "@/lib/types";
+import { GENDERS, ROLES } from "@/lib/types";
 import { downloadCsv, parseCsvRow } from "@/lib/csv-export";
 import { format } from "date-fns";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
@@ -81,6 +82,7 @@ export default function ContactsPage() {
     first_name: "",
     last_name: "",
     department: "",
+    role: "",
     gender: "" as "" | "male" | "female" | "other",
     met_date: "",
     notes: "",
@@ -108,7 +110,7 @@ export default function ContactsPage() {
       }
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setOpen(false);
-      setForm({ first_name: "", last_name: "", department: "", gender: "", met_date: "", notes: "" });
+      setForm({ first_name: "", last_name: "", department: "", role: "", gender: "", met_date: "", notes: "" });
       setPhotoFile(null);
       setPhotoPreview(null);
       toast.success("Contact added");
@@ -122,6 +124,7 @@ export default function ContactsPage() {
       first_name,
       last_name,
       department,
+      role,
       gender,
       photo_url,
       met_date,
@@ -131,6 +134,7 @@ export default function ContactsPage() {
       first_name: string;
       last_name: string | null;
       department: string | null;
+      role: string | null;
       gender: string | null;
       photo_url: string | null;
       met_date: string | null;
@@ -140,6 +144,7 @@ export default function ContactsPage() {
         first_name,
         last_name,
         department,
+        role,
         gender,
         photo_url,
         met_date,
@@ -154,7 +159,7 @@ export default function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setOpen(false);
       setEditingContact(null);
-      setForm({ first_name: "", last_name: "", department: "", gender: "", met_date: "", notes: "" });
+      setForm({ first_name: "", last_name: "", department: "", role: "", gender: "", met_date: "", notes: "" });
       setPhotoFile(null);
       setPhotoPreview(null);
       toast.success("Contact updated");
@@ -185,6 +190,7 @@ export default function ContactsPage() {
       first_name: form.first_name,
       last_name: form.last_name || undefined,
       department: form.department || undefined,
+      role: form.role || null,
       gender: form.gender || null,
       met_date: form.met_date || undefined,
       notes: form.notes || undefined,
@@ -210,6 +216,7 @@ export default function ContactsPage() {
         first_name: form.first_name,
         last_name: form.last_name || null,
         department: form.department || null,
+        role: form.role || null,
         gender: form.gender || null,
         photo_url: photoUrl,
         met_date: form.met_date || null,
@@ -221,6 +228,7 @@ export default function ContactsPage() {
         first_name: form.first_name,
         last_name: form.last_name || null,
         department: form.department || null,
+        role: form.role || null,
         gender: form.gender || null,
         photo_url: photoUrl,
         met_date: form.met_date || null,
@@ -231,10 +239,12 @@ export default function ContactsPage() {
 
   const openEdit = (contact: Contact) => {
     setEditingContact(contact);
+    const c = contact as Contact & { role?: string | null };
     setForm({
       first_name: contact.first_name,
       last_name: contact.last_name || "",
       department: contact.department || "",
+      role: c.role || "",
       gender: (contact.gender as "" | "male" | "female" | "other") || "",
       met_date: contact.met_date || "",
       notes: contact.notes || "",
@@ -247,7 +257,7 @@ export default function ContactsPage() {
 
   const openCreate = () => {
     setEditingContact(null);
-    setForm({ first_name: "", last_name: "", department: "", gender: "", met_date: "", notes: "" });
+    setForm({ first_name: "", last_name: "", department: "", role: "", gender: "", met_date: "", notes: "" });
     setPhotoFile(null);
     setPhotoPreview(null);
     setRemovePhoto(false);
@@ -274,7 +284,8 @@ export default function ContactsPage() {
         (c) =>
           c.first_name.toLowerCase().includes(search.toLowerCase()) ||
           c.last_name?.toLowerCase().includes(search.toLowerCase()) ||
-          c.department?.toLowerCase().includes(search.toLowerCase())
+          c.department?.toLowerCase().includes(search.toLowerCase()) ||
+          (c as Contact & { role?: string }).role?.toLowerCase().includes(search.toLowerCase())
       )
     : contacts;
 
@@ -407,11 +418,12 @@ export default function ContactsPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                const headers = ["First Name", "Last Name", "Department", "Gender", "Met Date", "Notes"];
+                const headers = ["First Name", "Last Name", "Department", "Role", "Gender", "Met Date", "Notes"];
                 const rows = filtered.map((c) => [
                   c.first_name,
                   c.last_name ?? "",
                   c.department ?? "",
+                  (c as Contact & { role?: string }).role ?? "",
                   c.gender ?? "",
                   c.met_date ?? "",
                   c.notes ?? "",
@@ -542,6 +554,25 @@ export default function ContactsPage() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={form.role || "none"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, role: v === "none" ? "" : v }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label htmlFor="gender">Gender</Label>
                   <Select
                     value={form.gender || "none"}
@@ -667,7 +698,7 @@ export default function ContactsPage() {
             action={
               <Button size="sm" onClick={openCreate}>
                 <Plus className="mr-1 size-4" />
-                Add contact
+                Add person
               </Button>
             }
           />
@@ -682,19 +713,15 @@ export default function ContactsPage() {
                   onCheckedChange={() => toggleSelect(contact.id)}
                   aria-label={`Select ${contact.first_name} ${contact.last_name}`}
                 />
-                <Avatar className="size-10">
-                  <AvatarImage
-                    src={
-                      contact.photo_url
-                        ? contact.photo_url
-                        : getPlaceholderSrc(contact.gender)
-                    }
-                  />
-                  <AvatarFallback>
-                    {contact.first_name.charAt(0)}
-                    {contact.last_name?.charAt(0) || ""}
-                  </AvatarFallback>
-                </Avatar>
+                <PersonAvatar
+                  src={
+                    contact.photo_url
+                      ? contact.photo_url
+                      : getPlaceholderSrc(contact.gender) ?? undefined
+                  }
+                  fallback={`${contact.first_name.charAt(0)}${contact.last_name?.charAt(0) || ""}`}
+                  size="default"
+                />
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base">
                     {contact.first_name} {contact.last_name || ""}
@@ -703,6 +730,11 @@ export default function ContactsPage() {
                     {contact.department && (
                       <Badge variant="outline" className={cn("text-xs", getTagColor(contact.department))}>
                         {contact.department}
+                      </Badge>
+                    )}
+                    {(contact as Contact & { role?: string }).role && (
+                      <Badge variant="outline" className="text-xs">
+                        {(contact as Contact & { role?: string }).role}
                       </Badge>
                     )}
                     {contact.gender && (

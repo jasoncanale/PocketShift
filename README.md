@@ -1,6 +1,6 @@
 # PocketShift
 
-> Personal work productivity tracker. Manage events, contacts, contracts, and spending across multiple companies.
+> Personal work productivity tracker. Manage events, people, contracts, and spending across multiple companies.
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel)](https://pocket-shift-xi.vercel.app)
 
@@ -11,9 +11,9 @@
 
 ## Features
 
-- **Calendar** – View events, contracts, and contacts in a unified calendar
+- **Calendar** – View events, contracts, and people in a unified calendar
 - **Events** – Tasks and projects with status (todo, in progress, done), recurrence, checklists
-- **Contacts** – People you meet at work with departments, photos, notes
+- **People** – People you meet at work with departments, roles, photos, notes
 - **Contracts** – Track work contracts with start/end dates and progress
 - **Companies** – Multi-company support with profiles and currency
 - **Spending** – Menu items, purchases, and spending statistics
@@ -81,7 +81,7 @@ src/
 │   ├── (app)/          # Main app routes (auth required)
 │   │   ├── calendar/   # Calendar view
 │   │   ├── companies/  # Company profiles
-│   │   ├── contacts/   # Contacts
+│   │   ├── contacts/   # People
 │   │   ├── contracts/  # Contracts
 │   │   ├── events/     # Events/tasks
 │   │   ├── profiles/   # Profile management

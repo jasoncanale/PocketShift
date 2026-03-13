@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import * as eventsApi from "@/lib/api/events";
+import * as contactsApi from "@/lib/api/contacts";
 import { useProfile } from "@/providers/profile-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,7 @@ import { format } from "date-fns";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { TooltipDesktop } from "@/components/tooltip-desktop";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import type { Event, EventInsert, EventStatus, ChecklistItem } from "@/lib/types";
+import type { Event, EventInsert, EventStatus, ChecklistItem, Contact } from "@/lib/types";
 
 function generateId() {
   return crypto.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -89,6 +90,7 @@ export default function EventsPage() {
     recurrence_rule: "" as "" | "daily" | "weekly" | "monthly",
     recurrence_end: "",
     checklist: [] as ChecklistItem[],
+    contact_ids: [] as string[],
   });
 
   const profileId = activeProfile?.id;
@@ -104,6 +106,15 @@ export default function EventsPage() {
     enabled: !!profileId,
   });
 
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["contacts", profileId],
+    queryFn: async () => {
+      if (!profileId) return [];
+      return contactsApi.getContacts(supabase, profileId);
+    },
+    enabled: !!profileId,
+  });
+
   const createMutation = useMutation({
     mutationFn: async (event: EventInsert) => eventsApi.createEvent(supabase, event),
     onSuccess: (data) => {
@@ -114,7 +125,7 @@ export default function EventsPage() {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       setOpen(false);
       setEditingEvent(null);
-      setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [] });
+      setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [], contact_ids: [] });
       toast.success("Event created");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create event"),
@@ -131,6 +142,7 @@ export default function EventsPage() {
       recurrence_rule,
       recurrence_end,
       checklist,
+      contact_ids,
     }: {
       id: string;
       title: string;
@@ -141,6 +153,7 @@ export default function EventsPage() {
       recurrence_rule?: string | null;
       recurrence_end?: string | null;
       checklist?: ChecklistItem[] | null;
+      contact_ids?: string[] | null;
     }) =>
       eventsApi.updateEvent(supabase, id, {
         title,
@@ -151,6 +164,7 @@ export default function EventsPage() {
         recurrence_rule: recurrence_rule ?? undefined,
         recurrence_end: recurrence_end ?? undefined,
         checklist: checklist ?? undefined,
+        contact_ids: contact_ids ?? undefined,
       }),
     onSuccess: (data) => {
       if (isOfflineQueued(data)) {
@@ -160,7 +174,7 @@ export default function EventsPage() {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       setOpen(false);
       setEditingEvent(null);
-      setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [] });
+      setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [], contact_ids: [] });
       toast.success("Event updated");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to update event"),
@@ -208,6 +222,8 @@ export default function EventsPage() {
         : form.due_time
       : null;
 
+    const contactIds = form.contact_ids.length ? form.contact_ids : null;
+
     if (editingEvent) {
       updateMutation.mutate({
         id: editingEvent.id,
@@ -219,6 +235,7 @@ export default function EventsPage() {
         recurrence_rule: recurrenceRule,
         recurrence_end: recurrenceEnd,
         checklist: form.checklist.length ? form.checklist : null,
+        contact_ids: contactIds,
       });
     } else {
       createMutation.mutate({
@@ -231,6 +248,7 @@ export default function EventsPage() {
         recurrence_rule: recurrenceRule,
         recurrence_end: recurrenceEnd,
         checklist: form.checklist.length ? form.checklist : null,
+        contact_ids: contactIds,
       });
     }
   };
@@ -238,6 +256,7 @@ export default function EventsPage() {
   const openEdit = (event: Event) => {
     setEditingEvent(event);
     const checklist = (event as Event & { checklist?: ChecklistItem[] | null }).checklist ?? [];
+    const contactIds = (event as Event & { contact_ids?: string[] | null }).contact_ids ?? [];
     setForm({
       title: event.title,
       description: event.description || "",
@@ -247,6 +266,7 @@ export default function EventsPage() {
       recurrence_rule: (event.recurrence_rule as "" | "daily" | "weekly" | "monthly") || "",
       recurrence_end: event.recurrence_end || "",
       checklist: Array.isArray(checklist) ? checklist : [],
+      contact_ids: Array.isArray(contactIds) ? contactIds : [],
     });
     setNewChecklistItem("");
     setOpen(true);
@@ -254,7 +274,7 @@ export default function EventsPage() {
 
   const openCreate = () => {
     setEditingEvent(null);
-    setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [] });
+    setForm({ title: "", description: "", due_date: "", due_time: "", status: "todo", recurrence_rule: "", recurrence_end: "", checklist: [], contact_ids: [] });
     setNewChecklistItem("");
     setOpen(true);
   };
@@ -386,6 +406,7 @@ export default function EventsPage() {
     const newStatus: EventStatus =
       doneCount === total ? "done" : doneCount > 0 ? "in_progress" : (event.status ?? "todo");
 
+    const contactIds = (event as Event & { contact_ids?: string[] | null }).contact_ids ?? null;
     updateMutation.mutate({
       id: event.id,
       title: event.title,
@@ -396,6 +417,7 @@ export default function EventsPage() {
       recurrence_rule: event.recurrence_rule || null,
       recurrence_end: event.recurrence_end || null,
       checklist: updated,
+      contact_ids: contactIds,
     });
   };
 
@@ -558,6 +580,35 @@ export default function EventsPage() {
                       onChange={(e) => setForm((f) => ({ ...f, recurrence_end: e.target.value }))}
                       className="mt-1"
                     />
+                  </div>
+                )}
+                {contacts.length > 0 && (
+                  <div>
+                    <Label>People</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Link people to this event
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {contacts.map((c: Contact) => (
+                        <label
+                          key={c.id}
+                          className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm cursor-pointer hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={form.contact_ids.includes(c.id)}
+                            onCheckedChange={(checked) =>
+                              setForm((f) => ({
+                                ...f,
+                                contact_ids: checked
+                                  ? [...f.contact_ids, c.id]
+                                  : f.contact_ids.filter((id) => id !== c.id),
+                              }))
+                            }
+                          />
+                          <span>{c.first_name} {c.last_name ?? ""}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div>
@@ -780,6 +831,24 @@ export default function EventsPage() {
                         {event.description}
                       </CardDescription>
                     )}
+                    {(() => {
+                      const contactIds = (event as Event & { contact_ids?: string[] | null }).contact_ids;
+                      const ids = Array.isArray(contactIds) ? contactIds : [];
+                      if (ids.length > 0) {
+                        const names = ids
+                          .map((id) => contacts.find((c) => c.id === id))
+                          .filter(Boolean)
+                          .map((c) => `${(c as Contact).first_name} ${(c as Contact).last_name ?? ""}`.trim());
+                        if (names.length > 0) {
+                          return (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              People: {names.join(", ")}
+                            </p>
+                          );
+                        }
+                      }
+                      return null;
+                    })()}
                     {(() => {
                       const checklist = (event as Event & { checklist?: ChecklistItem[] | null }).checklist;
                       const items = Array.isArray(checklist) ? checklist : [];

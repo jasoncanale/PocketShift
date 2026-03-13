@@ -348,6 +348,7 @@ export default function CompaniesPage() {
                         className="absolute -right-1 -top-1 size-6"
                         onClick={clearLogo}
                         aria-label="Remove logo"
+                        aria-label="Remove logo"
                       >
                         <X className="size-3" />
                       </Button>

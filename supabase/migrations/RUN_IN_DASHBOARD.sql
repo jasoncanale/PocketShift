@@ -32,3 +32,15 @@ alter table contacts add column if not exists gender text;
 
 -- Migration 7: Work days (0=Sun, 1=Mon, ..., 6=Sat; default Mon-Fri)
 alter table settings add column if not exists work_days text default '1,2,3,4,5';
+
+-- Migration 8: Budget limits for spending alerts
+alter table settings add column if not exists budget_weekly numeric;
+alter table settings add column if not exists budget_monthly numeric;
+
+-- Migration 9: Contract status (draft | active | completed)
+alter table contracts add column if not exists status text default 'active';
+
+-- Migration 10: People role and linking
+alter table contacts add column if not exists role text;
+alter table events add column if not exists contact_ids text[] default '{}';
+alter table contracts add column if not exists contact_id uuid references contacts(id) on delete set null;

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Copy, Check } from "lucide-react";
+import { useAuth } from "@/providers/auth-provider";
 
 interface ErrorDisplayProps {
   error: Error & { digest?: string };
@@ -13,6 +15,7 @@ interface ErrorDisplayProps {
 
 export function ErrorDisplay({ error, reset, minHeight = "min-h-svh" }: ErrorDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     console.error(error);
@@ -40,6 +43,9 @@ export function ErrorDisplay({ error, reset, minHeight = "min-h-svh" }: ErrorDis
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={reset} variant="default">
             Try again
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href={user ? "/calendar" : "/"}>Go home</Link>
           </Button>
           <Button onClick={handleCopy} variant="outline" size="sm">
             {copied ? (

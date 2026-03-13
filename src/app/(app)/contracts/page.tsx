@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import * as contractsApi from "@/lib/api/contracts";
+import * as contactsApi from "@/lib/api/contacts";
 import { useProfile } from "@/providers/profile-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { QueryError } from "@/components/query-error";
@@ -65,13 +73,25 @@ export default function ContractsPage() {
   const [form, setForm] = useState({
     start_date: "",
     duration_months: "",
+    end_date: "",
     contract_type: "",
     notes: "",
+    status: "active" as "draft" | "active" | "completed",
+    contact_id: "",
   });
 
   const profileId = activeProfile?.id;
 
   useKeyboardShortcuts({ onAdd: () => setOpen(true) });
+
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["contacts", profileId],
+    queryFn: async () => {
+      if (!profileId) return [];
+      return contactsApi.getContacts(supabase, profileId);
+    },
+    enabled: !!profileId,
+  });
 
   const { data: contracts = [], isLoading: contractsLoading, isError: contractsError, error: contractsErrorObj, refetch: refetchContracts } = useQuery({
     queryKey: ["contracts", profileId],
@@ -91,7 +111,7 @@ export default function ContractsPage() {
       }
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       setOpen(false);
-      setForm({ start_date: "", duration_months: "", contract_type: "", notes: "" });
+      setForm({ start_date: "", duration_months: "", end_date: "", contract_type: "", notes: "", status: "active", contact_id: "" });
       toast.success("Contract added");
     },
     onError: (err) => toast.error(formatError(err)),
@@ -105,6 +125,8 @@ export default function ContractsPage() {
       end_date,
       contract_type,
       notes,
+      status,
+      contact_id,
     }: {
       id: string;
       start_date: string;
@@ -112,6 +134,8 @@ export default function ContractsPage() {
       end_date: string | null;
       contract_type: string | null;
       notes: string | null;
+      status?: "draft" | "active" | "completed" | null;
+      contact_id?: string | null;
     }) => {
       return contractsApi.updateContract(supabase, id, {
         start_date,
@@ -119,6 +143,8 @@ export default function ContractsPage() {
         end_date,
         contract_type,
         notes,
+        status,
+        contact_id,
       });
     },
     onSuccess: (data) => {
@@ -129,7 +155,7 @@ export default function ContractsPage() {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       setOpen(false);
       setEditingContract(null);
-      setForm({ start_date: "", duration_months: "", contract_type: "", notes: "" });
+      setForm({ start_date: "", duration_months: "", end_date: "", contract_type: "", notes: "", status: "active", contact_id: "" });
       toast.success("Contract updated");
     },
     onError: (err) => toast.error(formatError(err)),
@@ -160,14 +186,23 @@ export default function ContractsPage() {
       return;
     }
 
-    const durationMonths = form.duration_months ? parseInt(form.duration_months) : null;
-    let endDate: string | null = null;
+    let durationMonths: number | null = form.duration_months ? parseInt(form.duration_months) : null;
+    let endDate: string | null = form.end_date?.trim() || null;
 
-    if (durationMonths && form.start_date) {
+    // Prefer end_date: if provided with start_date, derive duration_months
+    if (endDate && form.start_date) {
+      const start = new Date(form.start_date);
+      const end = new Date(endDate);
+      const months = Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000));
+      durationMonths = months;
+    } else if (durationMonths && form.start_date && !endDate) {
       const start = new Date(form.start_date);
       start.setMonth(start.getMonth() + durationMonths);
       endDate = start.toISOString().split("T")[0];
     }
+
+    const status = form.status || "active";
+    const contactId = form.contact_id || null;
 
     if (editingContract) {
       updateMutation.mutate({
@@ -177,6 +212,8 @@ export default function ContractsPage() {
         end_date: endDate,
         contract_type: form.contract_type || null,
         notes: form.notes || null,
+        status,
+        contact_id: contactId,
       });
     } else {
       createMutation.mutate({
@@ -186,17 +223,24 @@ export default function ContractsPage() {
         end_date: endDate,
         contract_type: form.contract_type || null,
         notes: form.notes || null,
+        status,
+        contact_id: contactId,
       });
     }
   };
 
   const openEdit = (contract: Contract) => {
     setEditingContract(contract);
+    const status = (contract as { status?: "draft" | "active" | "completed" | null }).status ?? "active";
+    const contactId = (contract as { contact_id?: string | null }).contact_id ?? "";
     setForm({
       start_date: contract.start_date ?? "",
       duration_months: contract.duration_months ? String(contract.duration_months) : "",
+      end_date: contract.end_date ?? "",
       contract_type: contract.contract_type || "",
       notes: contract.notes || "",
+      status: status === "draft" || status === "completed" ? status : "active",
+      contact_id: contactId,
     });
     setOpen(true);
   };
@@ -319,7 +363,7 @@ export default function ContractsPage() {
 
   const openCreate = () => {
     setEditingContract(null);
-    setForm({ start_date: "", duration_months: "", contract_type: "", notes: "" });
+    setForm({ start_date: "", duration_months: "", end_date: "", contract_type: "", notes: "", status: "active", contact_id: "" });
     setOpen(true);
   };
 
@@ -333,15 +377,55 @@ export default function ContractsPage() {
     return Math.round(((now - start) / (end - start)) * 100);
   };
 
-  const getStatus = (contract: Contract) => {
-    if (!contract.start_date) return "active";
+  const getDisplayStatus = (contract: Contract) => {
+    const storedStatus = (contract as { status?: "draft" | "active" | "completed" | null }).status ?? "active";
+    if (storedStatus === "completed" || storedStatus === "draft") return storedStatus;
     const now = new Date();
-    const start = new Date(contract.start_date);
     const end = contract.end_date ? new Date(contract.end_date) : null;
-
-    if (now < start) return "upcoming";
     if (end && now > end) return "expired";
+    if (!contract.start_date) return "active";
+    const start = new Date(contract.start_date);
+    if (now < start) return "upcoming";
     return "active";
+  };
+
+  const getCountdown = (contract: Contract): string | null => {
+    const end = contract.end_date ? new Date(contract.end_date) : null;
+    if (!end) return null;
+    const now = new Date();
+    const diffMs = end.getTime() - now.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    if (diffDays > 0) {
+      const years = Math.floor(diffDays / 365);
+      const months = Math.floor((diffDays % 365) / 30);
+      const days = diffDays % 30;
+      const parts: string[] = [];
+      if (years > 0) parts.push(`${years} year${years !== 1 ? "s" : ""}`);
+      if (months > 0) parts.push(`${months} month${months !== 1 ? "s" : ""}`);
+      if (days > 0 || parts.length === 0) parts.push(`${days} day${days !== 1 ? "s" : ""}`);
+      return `${parts.join(", ")} until end`;
+    }
+    if (diffDays < 0) {
+      return `${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""} ago`;
+    }
+    return "Ends today";
+  };
+
+  const syncEndDateFromDuration = () => {
+    if (!form.start_date || !form.duration_months) return;
+    const months = parseInt(form.duration_months, 10);
+    if (isNaN(months) || months < 1) return;
+    const start = new Date(form.start_date);
+    start.setMonth(start.getMonth() + months);
+    setForm((f) => ({ ...f, end_date: start.toISOString().split("T")[0] }));
+  };
+
+  const syncDurationFromEndDate = () => {
+    if (!form.start_date || !form.end_date) return;
+    const start = new Date(form.start_date);
+    const end = new Date(form.end_date);
+    const months = Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000));
+    if (months >= 1) setForm((f) => ({ ...f, duration_months: String(months) }));
   };
 
   if (!activeProfile) {
@@ -384,13 +468,14 @@ export default function ContractsPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-              const headers = ["Start Date", "Duration (months)", "End Date", "Contract Type", "Notes", "Created"];
+              const headers = ["Start Date", "Duration (months)", "End Date", "Contract Type", "Notes", "Status", "Created"];
               const rows = filteredContracts.map((c) => [
                 c.start_date ?? "",
                 c.duration_months ?? "",
                 c.end_date ?? "",
                 c.contract_type ?? "",
                 c.notes ?? "",
+                (c as { status?: string }).status ?? "",
                 c.created_at ? format(new Date(c.created_at), "yyyy-MM-dd HH:mm") : "",
               ]);
               downloadCsv(headers, rows, `contracts-${format(new Date(), "yyyy-MM-dd")}.csv`);
@@ -432,6 +517,17 @@ export default function ContractsPage() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="end_date">End Date (optional)</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={form.end_date}
+                    onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+                    onBlur={syncDurationFromEndDate}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="duration">Duration (months)</Label>
                   <Input
                     id="duration"
@@ -439,9 +535,26 @@ export default function ContractsPage() {
                     min="1"
                     value={form.duration_months}
                     onChange={(e) => setForm((f) => ({ ...f, duration_months: e.target.value }))}
+                    onBlur={syncEndDateFromDuration}
                     placeholder="e.g. 12"
                     className="mt-1"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={form.status}
+                    onValueChange={(v) => setForm((f) => ({ ...f, status: v as "draft" | "active" | "completed" }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="type">Type</Label>
@@ -453,6 +566,27 @@ export default function ContractsPage() {
                     className="mt-1"
                   />
                 </div>
+                {contacts.length > 0 && (
+                  <div>
+                    <Label htmlFor="contact">Contact person</Label>
+                    <Select
+                      value={form.contact_id || "none"}
+                      onValueChange={(v) => setForm((f) => ({ ...f, contact_id: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select contact" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {contacts.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.first_name} {c.last_name ?? ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea
@@ -555,7 +689,8 @@ export default function ContractsPage() {
           <div className="space-y-3">
           {filteredContracts.map((contract) => {
             const progress = getProgress(contract);
-            const status = getStatus(contract);
+            const status = getDisplayStatus(contract);
+            const countdown = getCountdown(contract);
 
             return (
               <Card key={contract.id}>
@@ -584,7 +719,9 @@ export default function ContractsPage() {
                         className={cn(
                           status === "active" && statusColors.active,
                           status === "upcoming" && statusColors.upcoming,
-                          status === "expired" && statusColors.expired
+                          status === "expired" && statusColors.expired,
+                          status === "draft" && "border-muted-foreground/50 text-muted-foreground",
+                          status === "completed" && "border-green-500/50 text-green-600 dark:text-green-400"
                         )}
                       >
                         {status}
@@ -614,6 +751,9 @@ export default function ContractsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
+                  {countdown && (
+                    <p className="text-xs text-muted-foreground mb-2">{countdown}</p>
+                  )}
                   {progress !== null && (
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
@@ -622,6 +762,12 @@ export default function ContractsPage() {
                       </div>
                       <Progress value={progress} className="h-2" />
                     </div>
+                  )}
+                  {(contract as { contact_id?: string | null }).contact_id && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Contact: {contacts.find((c) => c.id === (contract as { contact_id?: string }).contact_id)?.first_name}{" "}
+                      {contacts.find((c) => c.id === (contract as { contact_id?: string }).contact_id)?.last_name ?? ""}
+                    </p>
                   )}
                   {contract.notes && (
                     <p className="mt-2 text-sm text-muted-foreground">

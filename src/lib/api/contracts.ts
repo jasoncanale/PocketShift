@@ -33,6 +33,8 @@ export async function updateContract(
     end_date: string | null;
     contract_type: string | null;
     notes: string | null;
+    status?: "draft" | "active" | "completed" | null;
+    contact_id?: string | null;
   }
 ): Promise<void | { queued: true }> {
   const payload = { id, ...updates };

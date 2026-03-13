@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { useDateFormat } from "@/lib/hooks/use-date-format";
 import { eventCardBg, eventChipBg, calendarEntityColors } from "@/lib/colors";
 import type { CalendarView, Event, Contract, Contact } from "@/lib/types";
 import { expandRecurringEvents } from "@/lib/recurrence";
+import { downloadIcal } from "@/lib/ical-export";
 
 type CalendarViewProps = {
   events: Event[];
@@ -108,6 +109,16 @@ export function CalendarViewComponent({
     <div className="space-y-3">
       {/* Controls */}
       <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadIcal(events, contracts)}
+          aria-label="Export to iCal"
+        >
+          <Download className="mr-1 size-4" />
+          Export iCal
+        </Button>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" onClick={navigateBack} className="size-8" aria-label="Previous period">
             <ChevronLeft className="size-4" />
@@ -118,6 +129,7 @@ export function CalendarViewComponent({
           <Button variant="outline" size="icon" onClick={navigateForward} className="size-8" aria-label="Next period">
             <ChevronRight className="size-4" />
           </Button>
+        </div>
         </div>
         <Tabs value={view} onValueChange={(v) => setView(v as CalendarView)}>
           <TabsList className="h-8">

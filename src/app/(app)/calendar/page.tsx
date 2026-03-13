@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarViewComponent } from "@/components/calendar/calendar-view";
 import { createClient } from "@/lib/supabase/client";
@@ -10,8 +11,9 @@ import { useProfile } from "@/providers/profile-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QueryError } from "@/components/query-error";
 import { EmptyState } from "@/components/empty-state";
+import { Button } from "@/components/ui/button";
 import type { Event, Contract, Contact } from "@/lib/types";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Building2 } from "lucide-react";
 
 export default function CalendarPage() {
   const { activeProfile } = useProfile();
@@ -51,6 +53,14 @@ export default function CalendarPage() {
         icon={CalendarDays}
         title="Create a company to get started"
         description="Select or create a company to view your calendar."
+        action={
+          <Button size="sm" asChild>
+            <Link href="/companies">
+              <Building2 className="mr-1 size-4" />
+              Go to companies
+            </Link>
+          </Button>
+        }
       />
     );
   }

@@ -36,6 +36,7 @@ export async function updateEvent(
     recurrence_rule?: string | null;
     recurrence_end?: string | null;
     checklist?: { id: string; text: string; done: boolean }[] | null;
+    contact_ids?: string[] | null;
   }
 ): Promise<void | { queued: true }> {
   const payload = { id, ...updates };

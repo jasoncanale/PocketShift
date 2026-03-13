@@ -36,6 +36,7 @@ export const contactSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().optional(),
   department: z.string().optional(),
+  role: z.string().optional().nullable(),
   gender: z.enum(["male", "female", "other"]).optional().nullable(),
   met_date: z.string().optional(),
   notes: z.string().optional(),
@@ -60,14 +61,17 @@ export const eventSchema = z.object({
     .nullable()
     .transform((v) => (v === "" ? null : v)),
   recurrence_end: z.string().optional().nullable(),
+  contact_ids: z.array(z.string()).optional().nullable(),
 });
 
 // Contract
 export const contractSchema = z.object({
   start_date: z.string().min(1, "Start date is required"),
   duration_months: z.string().optional(),
+  end_date: z.string().optional(),
   contract_type: z.string().optional(),
   notes: z.string().optional(),
+  status: z.enum(["draft", "active", "completed"]).optional(),
 });
 
 // Menu item
@@ -100,6 +104,8 @@ export const settingsSchema = z.object({
   currency: z.string(),
   date_format: z.string().optional().nullable(),
   language: z.string().optional().nullable(),
+  budget_weekly: z.coerce.number().min(0).optional().nullable(),
+  budget_monthly: z.coerce.number().min(0).optional().nullable(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

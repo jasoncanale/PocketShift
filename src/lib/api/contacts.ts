@@ -31,17 +31,21 @@ export async function updateContact(
     first_name: string;
     last_name: string | null;
     department: string | null;
+    role: string | null;
     gender: string | null;
     photo_url: string | null;
     met_date: string | null;
     notes: string | null;
   }
-): Promise<void> {
-  const { error } = await supabase
-    .from("contacts")
-    .update(updates as never)
-    .eq("id", id);
-  if (error) throw error;
+): Promise<void | { queued: true }> {
+  const payload = { id, ...updates };
+  return withOfflineMutation("contacts", "update", payload as Record<string, unknown>, async () => {
+    const { error } = await supabase
+      .from("contacts")
+      .update(updates as never)
+      .eq("id", id);
+    if (error) throw error;
+  });
 }
 
 export async function deleteContact(
