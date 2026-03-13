@@ -113,7 +113,7 @@ export function GlobalSearch() {
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <div className="border-b p-2">
           <Input
-            placeholder="Search events, contacts, contracts..."
+            placeholder="Search events, people, contracts..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-8 border-0 focus-visible:ring-0"
@@ -149,7 +149,7 @@ export function GlobalSearch() {
               ))}
               {results.contacts.length > 0 && (
                 <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                  Contacts
+                  People
                 </div>
               )}
               {results.contacts.map((c) => (

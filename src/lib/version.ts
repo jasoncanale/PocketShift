@@ -5,4 +5,4 @@
  * - Renaming items, buttons, or labels
  * - Logo or icon changes
  */
-export const APP_VERSION = "1.1.1";
+export const APP_VERSION = "1.2.0";

@@ -440,7 +440,7 @@ export default function SettingsPage() {
                   </KbdGroup>
                 </dd>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">On Events, Contacts, Contracts, Companies, Spending</p>
+              <p className="text-xs text-muted-foreground mt-1">On Events, People, Contracts, Companies, Spending</p>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <dt className="text-muted-foreground">Close dialog</dt>

@@ -45,7 +45,7 @@ export default function StatisticsPage() {
         .from("purchases")
         .select("*")
         .eq("profile_id", profileId)
-        .order("purchased_at", { ascending: true });
+        .order("purchased_at", { ascending: false });
       return (data as Purchase[]) || [];
     },
     enabled: !!profileId,
@@ -71,7 +71,12 @@ export default function StatisticsPage() {
 
     const allTotal = purchases.reduce((s, p) => s + Number(p.price), 0);
 
-    return { todayTotal, weekTotal, monthTotal, allTotal };
+    const weekDays = 7;
+    const avgPerDayWeek = weekTotal / weekDays;
+    const daysWithPurchases = new Set(purchases.map((p) => new Date(p.purchased_at).toDateString())).size;
+    const avgPerDayAll = daysWithPurchases > 0 ? allTotal / daysWithPurchases : 0;
+
+    return { todayTotal, weekTotal, monthTotal, allTotal, avgPerDayWeek, avgPerDayAll };
   }, [purchases]);
 
   const categoryData = useMemo(() => {
@@ -94,18 +99,26 @@ export default function StatisticsPage() {
   }, [purchases]);
 
   const dailyData = useMemo(() => {
-    const map: Record<string, number> = {};
+    const map: Record<string, { amount: number; date: Date }> = {};
     const last14 = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
     purchases
       .filter((p) => new Date(p.purchased_at) >= last14)
       .forEach((p) => {
-        const day = new Date(p.purchased_at).toLocaleDateString(locale ?? undefined, {
+        const d = new Date(p.purchased_at);
+        const dayKey = d.toDateString();
+        const dayLabel = d.toLocaleDateString(locale ?? undefined, {
           month: "short",
           day: "numeric",
         });
-        map[day] = (map[day] || 0) + Number(p.price);
+        if (!map[dayKey]) map[dayKey] = { amount: 0, date: d };
+        map[dayKey].amount += Number(p.price);
       });
-    return Object.entries(map).map(([day, amount]) => ({ day, amount }));
+    return Object.values(map)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(({ amount, date }) => ({
+        day: date.toLocaleDateString(locale ?? undefined, { month: "short", day: "numeric" }),
+        amount,
+      }));
   }, [purchases, locale]);
 
   const topItems = useMemo(() => {
@@ -150,7 +163,7 @@ export default function StatisticsPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">This Week</p>
+            <p className="text-xs text-muted-foreground">Weekly</p>
             <p className="text-lg font-bold">{formatCurrency(stats.weekTotal, currency, locale)}</p>
           </CardContent>
         </Card>
@@ -166,6 +179,22 @@ export default function StatisticsPage() {
             <p className="text-lg font-bold">{formatCurrency(stats.allTotal, currency)}</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Avg per day</p>
+            <p className="text-lg font-bold">{formatCurrency(stats.avgPerDayWeek, currency, locale)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">(this week)</p>
+          </CardContent>
+        </Card>
+        {topItems.length > 0 && (
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Most likely to buy</p>
+              <p className="text-lg font-bold">{topItems[0].name}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{topItems[0].count}x in history</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Daily spending chart */}

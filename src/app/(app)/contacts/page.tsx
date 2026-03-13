@@ -377,7 +377,7 @@ export default function ContactsPage() {
       if (success > 0) parts.push(`Imported ${success}`);
       if (queued > 0) parts.push(`${queued} saved offline`);
       if (errors > 0) parts.push(`${errors} failed`);
-      toast.success(parts.length ? parts.join(", ") : "No contacts imported");
+      toast.success(parts.length ? parts.join(", ") : "No people imported");
     } finally {
       setImportInProgress(false);
     }
@@ -400,9 +400,9 @@ export default function ContactsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Contacts</h1>
+        <h1 className="text-xl font-bold">People</h1>
         <div className="flex gap-2">
-          <TooltipDesktop content="Export contacts to CSV">
+          <TooltipDesktop content="Export people to CSV">
             <Button
               variant="outline"
               size="sm"
@@ -416,7 +416,7 @@ export default function ContactsPage() {
                   c.met_date ?? "",
                   c.notes ?? "",
                 ]);
-                downloadCsv(headers, rows, `contacts-${format(new Date(), "yyyy-MM-dd")}.csv`);
+                downloadCsv(headers, rows, `people-${format(new Date(), "yyyy-MM-dd")}.csv`);
                 toast.success("Contacts exported");
               }}
               disabled={filtered.length === 0}
@@ -432,7 +432,7 @@ export default function ContactsPage() {
             className="hidden"
             onChange={handleImport}
           />
-          <TooltipDesktop content="Import contacts from CSV">
+          <TooltipDesktop content="Import people from CSV">
             <Button
               variant="outline"
               size="sm"
@@ -603,12 +603,12 @@ export default function ContactsPage() {
       {filtered.length > 0 && (
         <div className="flex items-center gap-2">
           <Checkbox
-            id="select-all-contacts"
+            id="select-all-people"
             checked={selectedIds.size === filtered.length && filtered.length > 0}
             onCheckedChange={toggleSelectAll}
-            aria-label="Select all contacts"
+            aria-label="Select all people"
           />
-          <label htmlFor="select-all-contacts" className="text-sm text-muted-foreground">Select all</label>
+          <label htmlFor="select-all-people" className="text-sm text-muted-foreground">Select all</label>
           {selectedIds.size > 0 && (
             <Button
               variant="destructive"
@@ -625,7 +625,7 @@ export default function ContactsPage() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search contacts..."
+          placeholder="Search people..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -636,7 +636,7 @@ export default function ContactsPage() {
         <QueryError
           error={contactsErrorObj ?? null}
           refetch={refetchContacts}
-          message="Failed to load contacts"
+          message="Failed to load people"
         />
       ) : contactsLoading ? (
         <div className="space-y-2">
@@ -656,13 +656,13 @@ export default function ContactsPage() {
         search ? (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              No contacts found
+              No people found
             </CardContent>
           </Card>
         ) : (
           <EmptyState
             icon={Users}
-            title="No contacts yet"
+            title="No people yet"
             description="Add people you work with."
             action={
               <Button size="sm" onClick={openCreate}>

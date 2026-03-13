@@ -100,7 +100,7 @@ export function LandingPage() {
                 <CalendarDays className="mb-2 size-8 text-brand" aria-hidden />
                 <h3 className="font-medium">Calendar</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Daily, weekly, and monthly views. See events, contracts, and contacts in one place.
+                  Daily, weekly, and monthly views. See events, contracts, and people in one place.
                 </p>
               </div>
               <div className="rounded-lg border border-brand/30 p-4">
@@ -112,7 +112,7 @@ export function LandingPage() {
               </div>
               <div className="rounded-lg border border-brand/30 p-4">
                 <Users className="mb-2 size-8 text-brand" aria-hidden />
-                <h3 className="font-medium">Contacts</h3>
+                <h3 className="font-medium">People</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Keep track of people you meet: name, department, photo, and meeting date.
                 </p>

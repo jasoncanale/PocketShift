@@ -45,7 +45,7 @@ const navItems = [
   { title: "Calendar", href: "/calendar", icon: CalendarDays },
   { title: "Contracts", href: "/contracts", icon: FileText },
   { title: "Events", href: "/events", icon: ClipboardList },
-  { title: "Contacts", href: "/contacts", icon: Users },
+  { title: "People", href: "/contacts", icon: Users },
   { title: "Spending", href: "/spending", icon: Coffee },
 ];
 
